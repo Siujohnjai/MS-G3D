@@ -20,7 +20,9 @@ model_args:
 phase: test
 device: 0
 test_batch_size: 32
-weights: ./pretrained_models/kinetics_bone.pt
+weights: ./pretrained-models/kinetics-bone.pt
 
 work_dir: ./eval/kinetics/bone/
 save_score: True
+
+device: [1,2,3]

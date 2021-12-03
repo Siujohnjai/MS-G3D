@@ -304,6 +304,11 @@ class Processor():
                 with open(self.arg.weights, 'r') as f:
                     weights = pickle.load(f)
             else:
+                # Get the current working directory
+                cwd = os.getcwd()
+
+                # Print the current working directory
+                print("Current working directory: {0}".format(cwd))
                 weights = torch.load(self.arg.weights)
 
             weights = OrderedDict(
@@ -684,7 +689,7 @@ def main():
     p = parser.parse_args()
     if p.config is not None:
         with open(p.config, 'r') as f:
-            default_arg = yaml.load(f)
+            default_arg = yaml.load(f, Loader=yaml.FullLoader)
         key = vars(p).keys()
         for k in default_arg.keys():
             if k not in key:

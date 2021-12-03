@@ -124,10 +124,10 @@ class Feeder_kinetics(Dataset):
         assert (self.label[index] == label)
 
         # sort by score
-        sort_index = (-data_numpy[2, :, :, :].sum(axis=1)).argsort(axis=1)
+        sort_index = (-data_numpy[2, :, :, :].sum(axis=1)).argsort(axis=1) # sum on V, sort on M (sort_index: [T, M])
         for t, s in enumerate(sort_index):
             data_numpy[:, t, :, :] = data_numpy[:, t, :, s].transpose((1, 2,
-                                                                       0))
+                                                                       0)) # s: [M,]
         data_numpy = data_numpy[:, :, :, 0:self.num_person_out]
 
         return data_numpy, label

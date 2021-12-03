@@ -17,9 +17,9 @@ model_args:
 
 # test
 phase: test
-device: [0]
+device: [0,1,2,3]
 test_batch_size: 32
-weights: ./pretrained_models/ntu60_xsub_bone.pt
+weights: ./pretrained-models/ntu60-xsub-bone.pt
 
 
 work_dir: ./eval/ntu/xsub/bone/
