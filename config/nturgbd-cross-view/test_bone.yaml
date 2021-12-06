@@ -17,10 +17,10 @@ model_args:
 
 # test
 phase: test
-device: [0]
+device: [0,1,2,3]
 test_batch_size: 32
-weights: ./pretrained_models/ntu60_xview_bone.pt
+weights: ./work_dir_att_edge_node/ntu/xview/msg3d_bone/weights/weights-10-6063.pt
 
 
-work_dir: ./eval/ntu/xview/bone/
+work_dir: ./eval_work_dir_att_edge_node/ntu/xview/bone/
 save_score: True

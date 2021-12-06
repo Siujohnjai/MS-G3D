@@ -131,12 +131,12 @@ class SpatialTemporal_MS_GCN(nn.Module):
         # Perform Graph Convolution
         res = self.residual(x)
         # print('x before attention', x.size())
-        # print('A before attention', A.size())
        
         # N, T, C, V > NT, C, 1, V
         xa = x.permute(0, 2, 1, 3).reshape(-1, C, 1, V)
 
         x = self.attention_conv(xa)
+        # print('A after attention', A.size())
         # print('x after attention', x.size())
         
         agg = torch.einsum('vu,nctu->nctv', A, x)
@@ -148,7 +148,7 @@ class SpatialTemporal_MS_GCN(nn.Module):
         agg = agg.permute(0,3,1,2,4).contiguous().view(N, self.num_scales*C, T, V)
         # print("agg ",agg.size())
 
-        out = self.mlp(agg)
+        out = self.mlp(agg) # TODO see whether we need CNN here (doing adding all the scale insider the msgcn block)
         # out = agg
         # print("res ",res)
 

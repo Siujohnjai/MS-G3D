@@ -29,8 +29,9 @@ model_args:
 
 # optim
 weight_decay: 0.0005
-base_lr: 0.2
+base_lr: 0.1
 step: [5, 10]
+# optimizer: Adam
 
 # training
 num_epoch: 10

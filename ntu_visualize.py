@@ -155,7 +155,7 @@ bone_pairs = {
 
 def visualize(args):
     data_path = args.datapath or './data/{}/val_data_joint.npy'.format(args.dataset)
-    label_path = args.labelpath or './data/{}/val_label.pkl.npy'.format(args.dataset)
+    label_path = args.labelpath or './data/{}/val_label.pkl'.format(args.dataset)
 
     data = np.load(data_path, mmap_mode='r')
     with open(label_path, 'rb') as f:

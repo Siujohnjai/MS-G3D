@@ -62,7 +62,11 @@ class MS_G3D(nn.Module):
 
         # Collapse the window dimension
         x = x.view(N, self.embed_channels_out, -1, self.window_size, V)
+        # print(x.size())
         x = self.out_conv(x).squeeze(dim=3)
+        # print(x.size())
+        # x= x.squeeze(dim=3)
+        # print(x.size())
         x = self.out_bn(x)
 
         # no activation
@@ -126,11 +130,11 @@ class Model(nn.Module):
 
         # r=3 STGC blocks
         self.gcn3d1 = MultiWindow_MS_G3D(3, c1, A_binary, num_g3d_scales, window_stride=1)
-        self.sgcn1 = nn.Sequential(
-            MS_GCN(num_gcn_scales, 3, c1, A_binary, disentangled_agg=True),
-            MS_TCN(c1, c1),
-            MS_TCN(c1, c1))
-        self.sgcn1[-1].act = nn.Identity()
+        # self.sgcn1 = nn.Sequential(
+        #     MS_GCN(num_gcn_scales, 3, c1, A_binary, disentangled_agg=True),
+        #     MS_TCN(c1, c1),
+        #     MS_TCN(c1, c1))
+        # self.sgcn1[-1].act = nn.Identity()
         self.tcn1 = MS_TCN(c1, c1)
 
         self.gcn3d2 = MultiWindow_MS_G3D(c1, c2, A_binary, num_g3d_scales, window_stride=2)
@@ -167,6 +171,7 @@ class Model(nn.Module):
         x = self.tcn2(x)
 
         # x = F.relu(self.sgcn3(x) + self.gcn3d3(x), inplace=True)
+        # x = F.relu(self.gcn3d3(x), inplace=True)
         # x = self.tcn3(x)
 
         out = x

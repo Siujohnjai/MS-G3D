@@ -12,12 +12,12 @@ train_feeder_args:
   random_move: False
   window_size: -1
   normalization: False
-  # debug: True
+  debug: True
 
 test_feeder_args:
   data_path: ./data/ntu/xview/val_data_bone.npy
   label_path: ./data/ntu/xview/val_label.pkl
-  # debug: True
+  debug: True
 
 # model
 model: model.msg3d.Model
@@ -32,13 +32,13 @@ model_args:
 # optim
 weight_decay: 0.0005
 base_lr: 0.1
-step: [30, 40]
+step: [5, 10]
 
 # training
 num_epoch: 10
-device: [0]
-batch_size: 8
-forward_batch_size: 8
-test_batch_size: 8
+device: [0,1,2,3]
+batch_size: 16
+forward_batch_size: 16
+test_batch_size: 16
 nesterov: True
 

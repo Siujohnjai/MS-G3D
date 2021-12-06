@@ -57,7 +57,8 @@ class spatial_attention(nn.Module):
                                       stride=stride,
                                       padding=self.padding)
         else:
-            self.qkv_conv = nn.Linear(self.in_channels, 2 * self.dk + self.dv)
+            # self.qkv_conv = nn.Linear(self.in_channels, 2 * self.dk + self.dv)
+            self.qkv_conv = nn.ModuleList([nn.Linear(self.in_channels, 2 * self.dk + self.dv) for i in range(25)])
             # self.qkv_conv = nn.Conv2d(self.in_channels, 2 * self.dk + self.dv, kernel_size=self.kernel_size,
             #                           stride=stride,
             #                           padding=self.padding)
@@ -66,7 +67,12 @@ class spatial_attention(nn.Module):
             self.attn_out = nn.Conv2d(self.dv * self.Nh // self.num, self.dv, kernel_size=1, stride=1)
         else:
             self.attn_out = nn.Linear(self.dv, self.in_channels)
+            # self.attn_out = nn.Linear(self.dv, 96)
             # self.attn_out = nn.Conv2d(self.dv, self.dv, kernel_size=1, stride=1)
+
+        self.weight_edge_qk = nn.Parameter(torch.randn(Nh, 75,self.dk //Nh))
+        # self.weight_edge_qk = self.split_heads_2d(self.weight_edge_qk, self.Nh)
+        self.weight_edge_v = nn.Parameter(torch.randn(Nh, 75,self.dv // Nh))
 
         if self.relative:
             # Two parameters are initialized in order to implement relative positional encoding
@@ -108,10 +114,13 @@ class spatial_attention(nn.Module):
                     logits = product
                 else:
                     logits = torch.cat((logits, product), dim=2)
-            # print("logits: ", logits.size())
 
         else:
-            logits = torch.matmul(flat_q.transpose(2, 3), flat_k)
+            # print(self.weight_edge_qk)
+            qw =  flat_q.transpose(2, 3)* self.weight_edge_qk
+            # qw =  flat_q.transpose(2, 3)
+            logits = torch.matmul(qw, flat_k)
+            # print("logits: ", logits.size())
 
 
         # In this version, the adjacency matrix is weighted and added to the attention logits of transformer to add
@@ -152,12 +161,15 @@ class spatial_attention(nn.Module):
         # (batch, Nh, joints, dvh)
         # weights*V
         # (batch, Nh, joints, joints)*(batch, Nh, joints, dvh)=(batch, Nh, joints, dvh)
-        attn_out = torch.matmul(weights, flat_v.transpose(2, 3))
+        attn_out = torch.matmul(weights, flat_v.transpose(2, 3)) * self.weight_edge_v
+        # attn_out = torch.matmul(weights, flat_v.transpose(2, 3)) 
 
         if not self.more_channels:
-            attn_out = torch.reshape(attn_out, (B, self.Nh, T, V, self.dv // self.Nh))
+            attn_out = torch.reshape(attn_out, (B, self.Nh, T, V, self.dv // self.Nh)) 
         else:
             attn_out = torch.reshape(attn_out, (B, self.Nh, T, V, self.dv // self.num))
+        
+        # print("attn ",attn_out.size())
 
         attn_out = attn_out.permute(0, 1, 4, 2, 3)
 
@@ -168,17 +180,37 @@ class spatial_attention(nn.Module):
         # Multiply for W0 (batch, out_channels, 1, joints) with out_channels=dv
         # print("dv: ", self.dv)
         attn_out = attn_out.view(B, V*T, -1)
+        # print(attn_out.size())
         attn_out = self.attn_out(attn_out)
         attn_out = attn_out.view(B, -1, T, V)
         return attn_out
 
     def compute_flat_qkv(self, x, dk, dv, Nh):
         N, C, T, V = x.size()
-        x = x.view(-1, C)
+        ####################################################################
+        # x1, x2, x3 = torch.split(x, [25,25,25], dim=3)
+        for i in range(25):
+            x_temp = x[:, :, :, i::25]
+            # x_temp = x_temp.view(N, C*T, -1)
+            x_temp = x_temp.transpose(1,3)
+            # print(x_temp.size())
+            # product = torch.matmul(flat_q_5.transpose(2, 3), flat_k)
+            product = self.qkv_conv[i](x_temp)
+            # print(product.size())
+            if (i == 0):
+                qkv = product
+            else:
+                qkv = torch.cat((qkv, product), dim=1)
+        ####################################################################
+        # x = x.view(-1, C)
+        # qkv = self.qkv_conv(x)
+        ####################################################################
+        # print(x1.size())
+        # print(x2.size())
+        # print(x3.size())
         # print("hi ", 2 * self.dk + self.dv, self.in_channels)
-        qkv = self.qkv_conv(x)
-        qkv = qkv.view(N, -1, T, V)
         # print("qkv ", qkv.size())
+        qkv = qkv.view(N, -1, T, V)
         # T=1 in this case, because we are considering each frame separately
         N, _, T, V = qkv.size()
 
